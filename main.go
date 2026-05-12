@@ -20,15 +20,6 @@ type Bot struct {
 	baseURL string
 }
 
-type LoginRequest struct {
-	Email    string `json:"LoginForm[username]"`
-	Password string `json:"LoginForm[password]"`
-}
-
-type RaiseRequest struct {
-	AdID string `json:"id"`
-}
-
 func NewBot(baseURL string) (*Bot, error) {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -276,6 +267,9 @@ func (b *Bot) CheckMainPage(idsToCheck [4]string) (bool, error) {
 func main() {
 	email := "orsk_avto2"
 	password := "oavt06062023"
+
+	locationTime, err := time.LoadLocation("Asia/Yekaterinburg")
+
 	adIDs := [4]string{
 		"3743393",
 		"3743390",
@@ -291,29 +285,11 @@ func main() {
 	err = bot.Login(email, password)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println(time.Now().In(locationTime), "Login - ", err)
 	}
 
-	//checkResult, err := bot.CheckMainPage(adIDs)
-	//
-	//fmt.Println(checkResult, err)
-	//
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return
-	//}
-	//
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//
-	//err = bot.CheckAuth()
-	//
-
-	locationTime, err := time.LoadLocation("Asia/Yekaterinburg")
-
 	if err != nil {
-		fmt.Println("Not correct time location")
+		log.Println("Not correct time location")
 	}
 	timeToAct := time.Now().In(locationTime)
 	ticker := time.NewTicker(60 * time.Minute)
@@ -323,17 +299,17 @@ func main() {
 		if timeToAct.Hour() >= 10 && timeToAct.Hour() < 19 {
 			err := bot.CheckAuth()
 			if err != nil {
-				fmt.Println(err)
+				log.Println(time.Now().In(locationTime), "CheckAuth - ", err)
 				err := bot.Login(email, password)
 				if err != nil {
-					fmt.Println(err)
+					log.Println(time.Now().In(locationTime), "Login - ", err)
 					continue
 				}
 			}
 
 			checkMainPage, err := bot.CheckMainPage(adIDs)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(time.Now().In(locationTime), "CheckMainPage - ", err)
 				continue
 			}
 
@@ -341,8 +317,10 @@ func main() {
 				for _, id := range adIDs {
 					err := bot.RaiseAd(id)
 					if err != nil {
-						fmt.Println(err)
+						log.Println(time.Now().In(locationTime), "RaiseAd - ", err)
+						continue
 					}
+					log.Println(time.Now().In(locationTime), "RaiseAd (succeed) - ", id)
 				}
 			}
 		}
